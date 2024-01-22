@@ -13,6 +13,7 @@ app.use(cors({
     method: ["POST", "PUT", "GET", "DELETE"],
 }))
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 dbConnect();
 app.listen(3000, () => {
