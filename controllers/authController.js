@@ -50,7 +50,39 @@ const signIn = async (req, res, next) => {
         next(error);
     }
 }
+const Google = async (req, res, next) => {
+    const { email, name, photoURL } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (user) {
+            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+            const { password: pass, ...rest } = user._doc;
+            res.status(200).cookie('access_token', token, {
+                httpOnly: true,
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            }).json(rest);
+        } else {
+            const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+            const hashedPassword = bcryptjs.hashSync(generatedPassword, 10);
+            const newUser = await User.create({
+                username: name.toLowerCase().split(' ').join("") + Math.random().toString(9).slice(-4),
+                email,
+                password: hashedPassword,
+                avatar: photoURL
+            })
+            const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+            const { password: pass, ...dataUser } = newUser._doc;
+            res.status(200).cookie('access_token', token, {
+                httpOnly: true,
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            }).json(dataUser)
+        }
+    } catch (error) {
+        next(error);
+    }
+}
 export const authController = {
     signUp,
-    signIn
+    signIn,
+    Google
 }
