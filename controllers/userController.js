@@ -11,13 +11,13 @@ const test = (req, res) => {
 const updateUser = async (req, res) => {
     const { id } = req.params;
 
-    const { password } = req.body;
+
     if (req.user.id !== id) {
         return next(appError.errHandlerCustom(403, 'You are not allowed to update this user'));
     }
     if (!req.body.username && !req.body.email) throw new Error('Missing inputs');
-    if (password) {
-        password = bcryptjs.hashSync(password);
+    if (req.body.password) {
+        req.body.password = bcryptjs.hashSync(req.body.password, 10);
     }
     try {
         const updateUser = await User.findByIdAndUpdate(id, {
@@ -25,7 +25,7 @@ const updateUser = async (req, res) => {
                 username: req.body.username,
                 email: req.body.email,
                 avatar: req.body.avatar,
-                password
+                password: req.body.password
             }
         }, { new: true }).select('-password');
         res.status(200).json({
