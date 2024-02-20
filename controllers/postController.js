@@ -6,7 +6,7 @@ const createPost = async (req, res, next) => {
     if (!req.user.isAdmin) {
         return next(appError.errHandlerCustom(403, 'You are not allowed to create a post'));
     };
-    if (!req.body.title || !req.body.content) {
+    if (!req.body.title || !req.body.postContent) {
         return next(appError.errHandlerCustom(400, 'Please provide all required fields'));
     }
     const slug = slugify(req.body.title);
@@ -14,6 +14,7 @@ const createPost = async (req, res, next) => {
     try {
         const newPost = await Post.create({
             ...req.body,
+            content: req.body.postContent,
             slug,
             userId: req.user.id
         })
