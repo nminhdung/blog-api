@@ -68,7 +68,7 @@ const getPosts = async (req, res, next) => {
                 ]
             }
         }
-        
+
         const posts = await Post.find({ ...filterGetPosts, ...querySearch }).sort({ updated: sortDir }).skip(start).limit(limit);
         res.status(200).json({
             success: posts ? true : false,
@@ -92,9 +92,32 @@ const deletePost = async (req, res, next) => {
         next(appError.errHandlerCustom(403, 'Something went wrong!!'))
     }
 }
+const updatePost = async (req, res, next) => {
+    if (!req.user.isAdmin) {
+        return next(appError.errHandlerCustom(403, 'You are not allowed to update this post '));
+    }
+    try {
+        const updatedPost = await Post.findByIdAndUpdate(req.params.postId, {
+            $set: {
+                title: req.body.title,
+                content: req.body.postContent,
+                category: req.body.category,
+                image: req.body.image
+            }
+        }, { new: true });
+        res.status(200).json({
+            success: updatedPost ? true : false,
+            mes: updatedPost ? "Updated successfully" : "Failed",
+            result: updatedPost ? updatedPost : null
+        })
+    } catch (error) {
+        next(appError.errHandlerCustom(403, 'Something went wrong!!'))
+    }
+}
 export const postController = {
     createPost,
     getSingleBlog,
     getPosts,
-    deletePost
+    deletePost,
+    updatePost
 }
