@@ -51,13 +51,16 @@ const getPosts = async (req, res, next) => {
         if (req.query.category) {
             filterGetPosts.category = req.query.category;
         };
+        if (req.query.userId) {
+            filterGetPosts.userId = req.query.userId
+        }
         if (req.query.slug) {
             filterGetPosts.slug = req.query.slug;
         };
         let querySearch = {};
-        
+
         if (req.query.searchTerm) {
-            delete querySearch.searchTerm; 
+            delete querySearch.searchTerm;
             querySearch = {
                 $or: [
                     { title: { $regex: req.query.searchTerm, $options: 'i' } },
@@ -65,9 +68,8 @@ const getPosts = async (req, res, next) => {
                 ]
             }
         }
-        console.log(querySearch)
-        console.log(filterGetPosts)
-        const posts = await Post.find({...filterGetPosts,...querySearch}).sort({ updated: sortDir }).skip(start).limit(limit);
+        
+        const posts = await Post.find({ ...filterGetPosts, ...querySearch }).sort({ updated: sortDir }).skip(start).limit(limit);
         res.status(200).json({
             success: posts ? true : false,
             result: posts ? posts : []
@@ -76,9 +78,23 @@ const getPosts = async (req, res, next) => {
         next(appError.errHandlerCustom(401, 'No post found'));
     }
 }
-
+const deletePost = async (req, res, next) => {
+    if (!req.user.isAdmin) {
+        return next(appError.errHandlerCustom(403, 'You are not allowed to delete this post '));
+    }
+    try {
+        const deletedPost = await Post.findByIdAndDelete(req.params.postId);
+        res.status(200).json({
+            success: deletedPost ? true : false,
+            mes: deletedPost ? "Deleted successfully" : "Failed"
+        })
+    } catch (error) {
+        next(appError.errHandlerCustom(403, 'Something went wrong!!'))
+    }
+}
 export const postController = {
     createPost,
     getSingleBlog,
-    getPosts
+    getPosts,
+    deletePost
 }

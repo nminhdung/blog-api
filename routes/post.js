@@ -7,6 +7,7 @@ const router = express.Router();
 router.post('/create-post', verifyToken, postController.createPost)
 router.get('/get/:postId', verifyToken, postController.getSingleBlog);
 router.get('/getposts', postController.getPosts);
+router.delete('/delete/:postId', verifyToken, postController.deletePost);
 
 
 export const postRouter = router;
