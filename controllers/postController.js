@@ -39,9 +39,46 @@ const getSingleBlog = async (req, res, next) => {
     }
 }
 
-
+const getPosts = async (req, res, next) => {
+    try {
+        let filterGetPosts = {}
+        const start = parseInt(req.query.start) || 0;
+        const limit = parseInt(req.query.limit) || process.env.LIMIT;
+        const sortDir = req.query.sort === 'asc' ? 1 : -1;
+        if (req.query.userId) {
+            filterGetPosts.userId = req.query.userId;
+        };
+        if (req.query.category) {
+            filterGetPosts.category = req.query.category;
+        };
+        if (req.query.slug) {
+            filterGetPosts.slug = req.query.slug;
+        };
+        let querySearch = {};
+        
+        if (req.query.searchTerm) {
+            delete querySearch.searchTerm; 
+            querySearch = {
+                $or: [
+                    { title: { $regex: req.query.searchTerm, $options: 'i' } },
+                    { content: { $regex: req.query.searchTerm, $options: 'i' } }
+                ]
+            }
+        }
+        console.log(querySearch)
+        console.log(filterGetPosts)
+        const posts = await Post.find({...filterGetPosts,...querySearch}).sort({ updated: sortDir }).skip(start).limit(limit);
+        res.status(200).json({
+            success: posts ? true : false,
+            result: posts ? posts : []
+        });
+    } catch (error) {
+        next(appError.errHandlerCustom(401, 'No post found'));
+    }
+}
 
 export const postController = {
     createPost,
-    getSingleBlog
+    getSingleBlog,
+    getPosts
 }
