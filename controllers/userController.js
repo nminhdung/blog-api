@@ -38,8 +38,45 @@ const updateUser = async (req, res) => {
     }
 }
 
+const getUsers = async (req, res, next) => {
+    if (!req.user.isAdmin) {
+        return next(appError.errHandlerCustom(403, 'You are not allowed to access all users'));
+    }
+    try {
+        const start = parseInt(req.query.startIndex) || 0;
+        const limit = parseInt(req.query.limit) || process.env.LIMIT;
+        const sortDir = req.query.sort === 'asc' ? 1 : -1;
 
+        const users = await User.find().sort({ createdAt: sortDir }).skip(start).limit(limit);
+        const totalUsers = await User.countDocuments();
+
+        res.status(200).json({
+            success: users ? true : false,
+            totalUsers,
+            result: users ? users : []
+        });
+    } catch (error) {
+        next(error)
+    }
+
+}
+
+const deleteUser = async (req, res, next) => {
+    if (!req.user.isAdmin) {
+        return next(appError.errHandlerCustom(403, 'You are not allowed to delete this post '));
+    }
+    try {
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        res.status(200).json({
+            success: deletedUser ? true : false,
+            mes: deletedUser ? "Deleted successfully" : "Failed"
+        })
+    } catch (error) {
+        next(appError.errHandlerCustom(403, 'Something went wrong!!'))
+    }
+}
 export const userController = {
-    test,
-    updateUser
+    getUsers,
+    updateUser,
+    deleteUser
 }
