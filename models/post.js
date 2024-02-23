@@ -33,7 +33,8 @@ var postSchema = new mongoose.Schema({
                 type: mongoose.Types.ObjectId,
                 ref: "User",
             },
-            content: { type: String }
+            content: { type: String },
+            updatedAt: { type: Date }
         },
 
     ],
