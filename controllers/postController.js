@@ -30,9 +30,19 @@ const createPost = async (req, res, next) => {
 const getSingleBlog = async (req, res, next) => {
     const { postId } = req.params;
     try {
-        const singleBlog = await Post.findById(postId).populate("userId", "username");
+        const singleBlog = await Post.findById(postId)
+            .populate("userId", "username")
+            .populate({
+                path: 'comments',
+                populate: {
+                    path: 'postedBy',
+                    select: 'username avatar'
+                }
+            });
         res.status(200).json({
-            rs: singleBlog ? singleBlog : null
+            result: singleBlog ? singleBlog : null,
+            success: singleBlog ? true : false,
+            mes: singleBlog ? '' : "Can not found post"
         })
     } catch (error) {
         next(error)
@@ -114,10 +124,39 @@ const updatePost = async (req, res, next) => {
         next(appError.errHandlerCustom(403, 'Something went wrong!!'))
     }
 }
+
+// lay postId, userId, content cua userId
+// them userId vao` truong` comment cua post
+const commentPost = async (req, res, next) => {
+    const { postId } = req.params;
+
+    const { comment, updatedAt } = req.body;
+
+    if (!req.user) {
+        return next(appError.errHandlerCustom(401, 'Unauthorized'));
+    }
+
+    if (comment?.length > 200) {
+        return next(appError.errHandlerCustom(400, "You are not allow comment more than 200 characters"));
+    }
+    try {
+        const post = await Post.findByIdAndUpdate(postId, {
+            $push: { comments: { postedBy: req.user.id, content: comment, updatedAt } }
+        }, { new: true });
+        res.status(200).json({
+            success: post ? true : false,
+            mes: post ? "Commented successfully" : "Something went wrong!",
+
+        })
+    } catch (error) {
+        next(error);
+    }
+}
 export const postController = {
     createPost,
     getSingleBlog,
     getPosts,
     deletePost,
-    updatePost
+    updatePost,
+    commentPost
 }
