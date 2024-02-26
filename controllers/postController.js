@@ -157,25 +157,61 @@ const deleteComment = async (req, res, next) => {
 
     const { commentId } = req.body;
 
-    console.log(postId);
-    console.log(commentId);
+    const post = await Post.findById(postId);
 
-    if (!req.user.isAdmin) {
+    const validUserDeleteComment = post?.comments?.find
+        (comment => comment.postedBy.toString() === req.user.id && commentId === comment._id.toString());
+    if (validUserDeleteComment || req.user.isAdmin) {
+        try {
+            const updatePost = await Post.findByIdAndUpdate(postId, {
+                $pull: { comments: { _id: commentId } }
+            }, { new: true });
+            res.status(200).json({
+                success: updatePost ? true : false,
+                mes: updatePost ? " Deleted  successfully" : "Something went wrong!",
+
+            })
+        } catch (error) {
+            next(error);
+        }
+
+    }
+    else {
         return next(appError.errHandlerCustom(403, 'You are not allow to delete this comment'));
     }
+}
+const editComment = async (req, res, next) => {
+    const { postId } = req.params;
+    const { commentId, content, updatedAt } = req.body;
+    console.log(req.user.id)
+    const post = await Post.findById(postId);
 
-
-    try {
-        const post = await Post.findByIdAndUpdate(postId, {
-            $pull: { comments: { _id: commentId } }
-        }, { new: true });
-        res.status(200).json({
-            success: post ? true : false,
-            mes: post ? " Deleted  successfully" : "Something went wrong!",
-
-        })
-    } catch (error) {
-        next(error);
+    const validUserEditComment = post?.comments?.find
+        (comment => comment.postedBy.toString() === req.user.id && commentId === comment._id.toString());
+    console.log(validUserEditComment)
+    if (validUserEditComment) {
+        try {
+            await Post.updateOne(
+                {
+                    "comments._id": commentId
+                },
+                {
+                    $set: {
+                        "comments.$.content": content,
+                        "comments.$.updatedAt": updatedAt,
+                    }
+                }, { new: true }
+            )
+            res.status(200).json({
+                status: true,
+                mes: "Updated your comment"
+            })
+        } catch (error) {
+            next(error);
+        }
+    } else {
+        console.log(123)
+        return next(appError.errHandlerCustom(403, 'You are not allow to delete this comment'));
     }
 }
 export const postController = {
@@ -185,5 +221,6 @@ export const postController = {
     deletePost,
     updatePost,
     commentPost,
-    deleteComment
+    deleteComment,
+    editComment
 }
