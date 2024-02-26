@@ -152,11 +152,38 @@ const commentPost = async (req, res, next) => {
         next(error);
     }
 }
+const deleteComment = async (req, res, next) => {
+    const { postId } = req.params;
+
+    const { commentId } = req.body;
+
+    console.log(postId);
+    console.log(commentId);
+
+    if (!req.user.isAdmin) {
+        return next(appError.errHandlerCustom(403, 'You are not allow to delete this comment'));
+    }
+
+
+    try {
+        const post = await Post.findByIdAndUpdate(postId, {
+            $pull: { comments: { _id: commentId } }
+        }, { new: true });
+        res.status(200).json({
+            success: post ? true : false,
+            mes: post ? " Deleted  successfully" : "Something went wrong!",
+
+        })
+    } catch (error) {
+        next(error);
+    }
+}
 export const postController = {
     createPost,
     getSingleBlog,
     getPosts,
     deletePost,
     updatePost,
-    commentPost
+    commentPost,
+    deleteComment
 }
