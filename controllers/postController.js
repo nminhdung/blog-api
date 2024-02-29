@@ -52,8 +52,10 @@ const getSingleBlog = async (req, res, next) => {
 const getPosts = async (req, res, next) => {
     try {
         let filterGetPosts = {}
-        const start = parseInt(req.query.start) || 0;
-        const limit = parseInt(req.query.limit) || process.env.LIMIT;
+        const page = parseInt(req.query.page) || 1;
+        const skip = +(page - 1) * 2;
+        const limit = parseInt(req.query.limit) || 2;
+        console.log(skip)
         const sortDir = req.query.sort === 'asc' ? 1 : -1;
         if (req.query.userId) {
             filterGetPosts.userId = req.query.userId;
@@ -78,11 +80,13 @@ const getPosts = async (req, res, next) => {
                 ]
             }
         }
-
-        const posts = await Post.find({ ...filterGetPosts, ...querySearch }).sort({ updated: sortDir }).skip(start).limit(limit);
+        console.log({ ...filterGetPosts, ...querySearch })
+        const posts = await Post.find({ ...filterGetPosts, ...querySearch }).skip(skip).limit(limit).sort(`createdAt ${sortDir}`);
+        const counts = await Post.find({ ...filterGetPosts, ...querySearch }).countDocuments();
         res.status(200).json({
             success: posts ? true : false,
-            result: posts ? posts : []
+            result: posts ? posts : [],
+            counts
         });
     } catch (error) {
         next(appError.errHandlerCustom(401, 'No post found'));
