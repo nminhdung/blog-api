@@ -11,6 +11,7 @@ app.use(cors({
     origin: [process.env.URL_CLIENT,"https://blog-ui-lilac.vercel.app"],
     credentials: true,
     method: ["POST", "PUT", "GET", "DELETE"],
+    exposedHeaders: ["set-cookie"],
 }))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
