@@ -2,13 +2,13 @@ import express from 'express';
 import dotenv from "dotenv"
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { dbConnect } from "./config/dbConnect.js"
-import { initRoutes } from "./routes/index.js"
+import { dbConnect } from "./config/dbConnect.js";
+import { initRoutes } from "./routes/index.js";
 
 dotenv.config();
 const app = express();
 app.use(cors({
-    origin: [process.env.URL_CLIENT],
+    origin: [process.env.URL_CLIENT,"https://blog-ui-lilac.vercel.app"],
     credentials: true,
     method: ["POST", "PUT", "GET", "DELETE"],
 }))
