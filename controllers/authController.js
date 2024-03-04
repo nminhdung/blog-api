@@ -44,7 +44,8 @@ const signIn = async (req, res, next) => {
         res.cookie("access_token", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
         res.status(200).json({
             result: validUser ? userData : null,
-            success: validUser ? true : false
+            success: validUser ? true : false,
+            accessToken: validUser ? token : null
         });
     } catch (error) {
         next(error);
